@@ -1,87 +1,99 @@
+const contenedorProductos = document.getElementById("contenedor-productos");
 
-let producto;
+const contenedorCarrito = document.getElementById("carrito-contenedor");
 
-//array de objetos
+const botonVaciar = document.getElementById("vaciar-carrito");
 
-const productos = [
-  {
-    nombre: "Dunk Low",
-    productoAVender: "Sneaker",
-    marca: "Nike",
-    precio: 200,
-    estado: "Nueva",
-  },
-  {
-    nombre: "Jordan 4",
-    productoAVender: "Sneaker",
-    marca: "Nike",
-    precio: 5000,
-    estado: "Nueva",
-  },
-  {
-    nombre: "Yeezy",
-    productoAVender: "Sneaker",
-    marca: "Adidas",
-    precio: 150,
-    estado: "Nueva",
-  },
-];
+const contadorCarrito = document.getElementById("contadorCarrito");
 
-function bienvenida() {
-  nombre = prompt("¡Bienvendio! Veo que te gusto nuestra coleccion de Sneakers. Para realizar la compra necesitamos tu Nombre u/o apodo.");
-  if (nombre == "") {
-    alert("Por favor ingresa al menos un nombre o apodo");
-    iniciarEvento();
-  } else if (nombre == null) {
-    alert("Hasta la próxima!!");
+const cantidad = document.getElementById("cantidad");
+const precioTotal = document.getElementById("precioTotal");
+const cantidadTotal = document.getElementById("cantidadTotal");
+
+let carrito = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("carrito")) {
+    carrito = JSON.parse(localStorage.getItem("carrito"));
+    actualizarCarrito();
+  }
+});
+
+botonVaciar.addEventListener("click", () => {
+  carrito.length = 0;
+  actualizarCarrito();
+});
+
+stockProductos.forEach((producto) => {
+  const div = document.createElement("div");
+  div.classList.add("producto");
+  div.innerHTML = `
+    <img src=${producto.img} alt= "">
+    <h3>${producto.nombre}</h3>
+    <p>${producto.desc}</p>
+    <p>Talle: ${producto.talle}</p>
+    <p class="precioProducto">Precio:$ ${producto.precio}</p>
+    <button id="agregar${producto.id}" class="boton-agregar">Agregar <i class="fas fa-shopping-cart"></i></button>
+    `;
+  contenedorProductos.appendChild(div);
+  const boton = document.getElementById(`agregar${producto.id}`);
+  boton.addEventListener("click", () => {
+    agregarAlCarrito(producto.id);
+  });
+});
+
+const agregarAlCarrito = (prodId) => {
+  const existe = carrito.some((prod) => prod.id === prodId);
+
+  if (existe) {
+    const prod = carrito.map((prod) => {
+      if (prod.id === prodId) {
+        prod.cantidad++;
+      }
+    });
   } else {
-    seleccionProducto();
+    const item = stockProductos.find((prod) => prod.id === prodId);
+
+    carrito.push(item);
   }
-}
 
-function seleccionProducto() {
-    sneakers = prompt (`${nombre}! Elije una opción
-  1 - Todos los productos;
-  2 - Sólo Adidas;
-  3 - Sólo Nike;
-  0 - Salir
-  `);
+  actualizarCarrito();
+};
 
-  switch (sneakers) {
-    case "1":
-      mostrarProductos();
-      break;
-    case "2":
-      mostrarAdidas();
-      seleccionProducto();
-      break;
-    case "3":
-      mostrarNike();
-      seleccionProducto();
-      break;
-    case "0":
-      alert("Hasta la próxima!!");
-      break;
-    default:
-      alert("Por favor, ingrese un número válido");
-      seleccionProducto();
-      break;
-  }
-}
-function mostrarProductos() {
-  productos.forEach((element) => console.log(element));
-  seleccionProducto();
-}
-function mostrarAdidas() {
-  let adidas = productos.filter((v) => v.marca == "Adidas");
-  console.log("Lista de adidas:")
-  console.log(adidas);
-}
-function mostrarNike() {
-  let nike = producto.filter((v) => v.marca == "Nike");
-  console.log("Lista de Nike:")
-  console.log(nike);
-}
+const eliminarDelCarrito = (prodId) => {
+  const item = carrito.find((prod) => prod.id === prodId);
 
+  const indice = carrito.indexOf(item);
 
-bienvenida();
+  carrito.splice(indice, 1);
+  actualizarCarrito();
+
+  console.log(carrito);
+};
+
+const actualizarCarrito = () => {
+  contenedorCarrito.innerHTML = "";
+
+  carrito.forEach((prod) => {
+    const div = document.createElement("div");
+    div.className = "productoEnCarrito";
+    div.innerHTML = `
+        <p>${prod.nombre}</p>
+        <p>Precio:$${prod.precio}</p>
+        <p>Cantidad: <span id="cantidad">${prod.cantidad}</span></p>
+        <button onclick="eliminarDelCarrito(${prod.id})" class="boton-eliminar"><i class="fas fa-trash-alt"></i></button>
+        `;
+
+    contenedorCarrito.appendChild(div);
+
+    localStorage.setItem("carrito", JSON.stringify(carrito));
+  });
+
+  contadorCarrito.innerText = carrito.length;
+
+  console.log(carrito);
+  precioTotal.innerText = carrito.reduce(
+    (acc, prod) => acc + prod.cantidad * prod.precio,
+    0
+  );
+};
